@@ -33,3 +33,15 @@ export function getEnemyMaxHp(floor: number): number {
   const wallAdjusted = isWallFloor(floor) ? scaled * WALL_MULTIPLIER : scaled;
   return Math.round(wallAdjusted);
 }
+
+/**
+ * Gold reward for clearing a floor — the resource spent recruiting and
+ * leveling Sellswords. Scales gently with floor so the early game funds
+ * a first recruit within the first few clears.
+ */
+const GOLD_PER_FLOOR_BASE = 4;
+const GOLD_PER_FLOOR_STEP = 1.5;
+
+export function getGoldReward(floor: number): number {
+  return Math.round(GOLD_PER_FLOOR_BASE + floor * GOLD_PER_FLOOR_STEP);
+}

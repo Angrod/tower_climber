@@ -7,24 +7,34 @@ import { gameCopy } from '@/constants/gameCopy';
 
 interface WallBannerProps {
   visible: boolean;
+  /** Defaults to the Tower Floor Wall copy/tone (destructive/red). */
+  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  title?: string;
+  subtitle?: string;
+  tone?: 'danger' | 'success';
 }
 
-export function WallBanner({ visible }: WallBannerProps) {
+export function WallBanner({
+  visible,
+  icon = 'shield-alert',
+  title = gameCopy.wallLabel,
+  subtitle = gameCopy.wallSubLabel,
+  tone = 'danger',
+}: WallBannerProps) {
   const colors = useColors();
   if (!visible) return null;
+
+  const tint = tone === 'danger' ? colors.destructive : colors.primary;
 
   return (
     <Animated.View
       entering={FadeInDown.duration(220)}
       exiting={FadeOutUp.duration(220)}
-      style={[
-        styles.banner,
-        { backgroundColor: colors.destructive, shadowColor: colors.destructive },
-      ]}
+      style={[styles.banner, { backgroundColor: tint, shadowColor: tint }]}
     >
-      <MaterialCommunityIcons name="shield-alert" size={18} color="#FFFFFF" />
-      <Text style={styles.title}>{gameCopy.wallLabel.toUpperCase()}</Text>
-      <Text style={styles.subtitle}>{gameCopy.wallSubLabel}</Text>
+      <MaterialCommunityIcons name={icon} size={18} color="#FFFFFF" />
+      <Text style={styles.title}>{title.toUpperCase()}</Text>
+      <Text style={styles.subtitle}>{subtitle}</Text>
     </Animated.View>
   );
 }

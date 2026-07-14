@@ -10,8 +10,10 @@ import {
   AUTO_ATTACK_UNLOCK_FLOOR,
   BASE_ATTACK_POWER,
   getEnemyMaxHp,
+  getGoldReward,
   isWallFloor,
 } from './formulas';
+import { createInitialSoldiersState } from './soldierEngine';
 import type { GameEvent, GameState } from './types';
 
 export function createInitialState(): GameState {
@@ -26,6 +28,8 @@ export function createInitialState(): GameState {
     autoAttackActive: false,
     totalTaps: 0,
     floorsCleared: 0,
+    gold: 0,
+    soldiers: createInitialSoldiersState(),
   };
 }
 
@@ -47,6 +51,7 @@ function applyDamage(state: GameState, amount: number): EngineResult {
 
   events.push({ type: 'enemyDefeated', payload: { floor: state.floor } });
 
+  const goldReward = getGoldReward(state.floor);
   const nextFloor = state.floor + 1;
   const nextMaxHp = getEnemyMaxHp(nextFloor);
   const nextState: GameState = {
@@ -55,9 +60,11 @@ function applyDamage(state: GameState, amount: number): EngineResult {
     enemyMaxHp: nextMaxHp,
     enemyCurrentHp: nextMaxHp,
     floorsCleared: state.floorsCleared + 1,
+    gold: state.gold + goldReward,
     autoAttackUnlocked:
       state.autoAttackUnlocked || nextFloor >= AUTO_ATTACK_UNLOCK_FLOOR,
   };
+  events.push({ type: 'goldEarned', payload: { amount: goldReward } });
   events.push({ type: 'floorAdvanced', payload: { floor: nextFloor } });
   if (isWallFloor(nextFloor)) {
     events.push({ type: 'wallReached', payload: { floor: nextFloor } });

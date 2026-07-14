@@ -22,13 +22,43 @@ export interface GameState {
   totalTaps: number;
   /** Lifetime count of floors cleared. */
   floorsCleared: number;
+  /** Gold earned by clearing floors; spent recruiting/leveling soldiers. */
+  gold: number;
+  /** Sellswords roster progression. */
+  soldiers: SoldiersState;
+}
+
+/**
+ * The 7-unit Sellswords roster. These are the only valid soldier ids —
+ * original names for this product, never the reference game's unit names.
+ */
+export type SoldierId =
+  | 'squire'
+  | 'footman'
+  | 'archer'
+  | 'knight'
+  | 'druid'
+  | 'witch'
+  | 'wizard';
+
+export interface SoldierUnitState {
+  /** 0 means the unit has not been recruited yet. */
+  level: number;
+}
+
+export interface SoldiersState {
+  units: Record<SoldierId, SoldierUnitState>;
 }
 
 export type GameEventType =
   | 'damageDealt'
   | 'enemyDefeated'
   | 'floorAdvanced'
-  | 'wallReached';
+  | 'wallReached'
+  | 'goldEarned'
+  | 'soldierRecruited'
+  | 'soldierLeveledUp'
+  | 'soldierWallReached';
 
 export interface GameEvent {
   type: GameEventType;
