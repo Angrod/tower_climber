@@ -14,6 +14,7 @@ import {
   isWallFloor,
 } from './formulas';
 import { createInitialSoldiersState } from './soldierEngine';
+import { getEffectiveAttackPower } from './shopFormulas';
 import type { GameEvent, GameState } from './types';
 
 export function createInitialState(): GameState {
@@ -30,6 +31,11 @@ export function createInitialState(): GameState {
     floorsCleared: 0,
     gold: 0,
     soldiers: createInitialSoldiersState(),
+    shopCurrency: 0,
+    boostActiveUntil: null,
+    fireSwordOwned: false,
+    lastDailyLoginDate: null,
+    adsRemoved: false,
   };
 }
 
@@ -75,7 +81,7 @@ function applyDamage(state: GameState, amount: number): EngineResult {
 
 /** A manual player tap. Counts toward lifetime tap stats. */
 export function applyManualTap(state: GameState): EngineResult {
-  const result = applyDamage(state, state.attackPower);
+  const result = applyDamage(state, getEffectiveAttackPower(state));
   return {
     state: { ...result.state, totalTaps: result.state.totalTaps + 1 },
     events: result.events,
@@ -85,7 +91,7 @@ export function applyManualTap(state: GameState): EngineResult {
 /** An automated attack tick. Does not count as a manual tap. */
 export function applyAutoAttackTick(state: GameState): EngineResult {
   if (!state.autoAttackActive) return { state, events: [] };
-  return applyDamage(state, state.attackPower);
+  return applyDamage(state, getEffectiveAttackPower(state));
 }
 
 export function toggleAutoAttack(state: GameState): GameState {

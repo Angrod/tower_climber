@@ -1,1 +1,2 @@
 - [Collector's Tower scope](collectors-tower-scope.md) — build for one game only; multi-product/reskin engine was dropped as a requirement, don't reintroduce it unasked.
+- [Collector's Tower monetization](collectors-tower-monetization.md) — currency is earn-only by design; RevenueCat/ads are stubbed pending integration, wired for an easy swap-in later.

@@ -26,6 +26,21 @@ export interface GameState {
   gold: number;
   /** Sellswords roster progression. */
   soldiers: SoldiersState;
+
+  /**
+   * Shop Currency — earn-only, never purchasable with real money. Earned
+   * from daily login and opt-in rewarded ads. Spent on Shop boosts and
+   * the Fire Sword.
+   */
+  shopCurrency: number;
+  /** Epoch ms when the active Power Surge boost expires; null if none is active. */
+  boostActiveUntil: number | null;
+  /** Whether the player owns the Fire Sword. Shop-Currency-only — never for sale with real money. */
+  fireSwordOwned: boolean;
+  /** YYYY-MM-DD of the last claimed daily login reward, or null if never claimed. */
+  lastDailyLoginDate: string | null;
+  /** Whether the player purchased the one-time ad-free buyout — the only real-money purchase in the game. */
+  adsRemoved: boolean;
 }
 
 /**
@@ -58,7 +73,12 @@ export type GameEventType =
   | 'goldEarned'
   | 'soldierRecruited'
   | 'soldierLeveledUp'
-  | 'soldierWallReached';
+  | 'soldierWallReached'
+  | 'shopCurrencyEarned'
+  | 'dailyLoginClaimed'
+  | 'boostPurchased'
+  | 'fireSwordPurchased'
+  | 'adsRemoved';
 
 export interface GameEvent {
   type: GameEventType;

@@ -9,6 +9,7 @@ import { StatBar } from '@/components/game/StatBar';
 import { WallBanner } from '@/components/game/WallBanner';
 import { EnemyStage } from '@/components/game/EnemyStage';
 import { AutoAttackToggle } from '@/components/game/AutoAttackToggle';
+import { BannerAdSlot } from '@/components/ads/BannerAdSlot';
 
 export default function ClimbScreen() {
   const colors = useColors();
@@ -60,12 +61,15 @@ export default function ClimbScreen() {
           />
         </View>
 
-        <AutoAttackToggle
-          unlocked={state.autoAttackUnlocked}
-          active={state.autoAttackActive}
-          unlockFloor={AUTO_ATTACK_UNLOCK_FLOOR}
-          onToggle={toggleAutoAttack}
-        />
+        <View style={styles.bottomStack}>
+          <AutoAttackToggle
+            unlocked={state.autoAttackUnlocked}
+            active={state.autoAttackActive}
+            unlockFloor={AUTO_ATTACK_UNLOCK_FLOOR}
+            onToggle={toggleAutoAttack}
+          />
+          {!state.adsRemoved && <BannerAdSlot />}
+        </View>
       </View>
     </View>
   );
@@ -88,5 +92,8 @@ const styles = StyleSheet.create({
   stage: {
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  bottomStack: {
+    gap: 10,
   },
 });
