@@ -2,13 +2,12 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
-import type { GameSkin } from '@/lib/engine/types';
+import { gameCopy } from '@/constants/gameCopy';
 
 interface StatBarProps {
   floor: number;
   attackPower: number;
   floorsCleared: number;
-  skin: GameSkin;
 }
 
 function StatPill({
@@ -43,7 +42,7 @@ function StatPill({
   );
 }
 
-export function StatBar({ floor, attackPower, floorsCleared, skin }: StatBarProps) {
+export function StatBar({ floor, attackPower, floorsCleared }: StatBarProps) {
   const colors = useColors();
   return (
     <View style={styles.row}>
@@ -55,7 +54,7 @@ export function StatBar({ floor, attackPower, floorsCleared, skin }: StatBarProp
       />
       <StatPill
         icon="sword"
-        label={skin.attackShortLabel}
+        label={gameCopy.attackShortLabel}
         value={String(attackPower)}
         tint={colors.destructive}
       />

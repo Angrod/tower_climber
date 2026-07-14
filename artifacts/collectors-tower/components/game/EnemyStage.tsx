@@ -9,8 +9,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
+import { gameCopy } from '@/constants/gameCopy';
 import type { DamagePopup } from '@/context/GameContext';
-import type { GameSkin } from '@/lib/engine/types';
 
 interface EnemyStageProps {
   floor: number;
@@ -19,7 +19,6 @@ interface EnemyStageProps {
   isWallFloor: boolean;
   damagePopups: DamagePopup[];
   onTap: () => void;
-  skin: GameSkin;
 }
 
 export function EnemyStage({
@@ -29,7 +28,6 @@ export function EnemyStage({
   isWallFloor,
   damagePopups,
   onTap,
-  skin,
 }: EnemyStageProps) {
   const colors = useColors();
   const scale = useSharedValue(1);
@@ -51,7 +49,7 @@ export function EnemyStage({
   return (
     <View style={styles.container}>
       <Text style={[styles.floorLabel, { color: colors.mutedForeground }]}>
-        {skin.floorLabel(floor)}
+        {gameCopy.floorLabel(floor)}
       </Text>
 
       <View style={styles.popupLayer} pointerEvents="none">
@@ -89,7 +87,7 @@ export function EnemyStage({
       </Pressable>
 
       <Text style={[styles.enemyName, { color: colors.foreground }]}>
-        {skin.enemyLabel}
+        {gameCopy.enemyLabel}
       </Text>
 
       <View

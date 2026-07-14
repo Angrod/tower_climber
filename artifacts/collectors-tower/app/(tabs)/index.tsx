@@ -4,13 +4,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { useGame } from '@/context/GameContext';
 import { isWallFloor, AUTO_ATTACK_UNLOCK_FLOOR } from '@/lib/engine/formulas';
-import { towerClimberSkin } from '@/lib/engine/skins/towerClimber';
+import { gameCopy } from '@/constants/gameCopy';
 import { StatBar } from '@/components/game/StatBar';
 import { WallBanner } from '@/components/game/WallBanner';
 import { EnemyStage } from '@/components/game/EnemyStage';
 import { AutoAttackToggle } from '@/components/game/AutoAttackToggle';
-
-const skin = towerClimberSkin;
 
 export default function ClimbScreen() {
   const colors = useColors();
@@ -29,7 +27,7 @@ export default function ClimbScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <WallBanner visible={wallBannerVisible} skin={skin} />
+      <WallBanner visible={wallBannerVisible} />
 
       <View
         style={[
@@ -42,13 +40,12 @@ export default function ClimbScreen() {
       >
         <View>
           <Text style={[styles.title, { color: colors.foreground }]}>
-            {skin.productName}
+            {gameCopy.productName}
           </Text>
           <StatBar
             floor={state.floor}
             attackPower={state.attackPower}
             floorsCleared={state.floorsCleared}
-            skin={skin}
           />
         </View>
 
@@ -60,7 +57,6 @@ export default function ClimbScreen() {
             isWallFloor={isWallFloor(state.floor)}
             damagePopups={damagePopups}
             onTap={tapAttack}
-            skin={skin}
           />
         </View>
 

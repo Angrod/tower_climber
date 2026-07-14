@@ -1,12 +1,8 @@
 /**
- * Abstract engine types — the logical data model.
- *
- * Nothing in this file (or the rest of lib/engine) may reference sprites,
- * colors, movement axes, icon names, or copy strings for a specific
- * product variant. That mapping lives entirely in lib/engine/skins/*.
- * This separation is what lets the same engine power multiple visually
- * distinct products later (vertical climber, downward digger, radial
- * defense, etc.) as pure presentation swaps.
+ * Engine types — the logical data model for the game state and the
+ * events the engine emits. Nothing in this file (or the rest of
+ * lib/engine) references colors, icon names, or UI copy — that lives in
+ * constants/gameCopy.ts and the components that render the game.
  */
 
 export interface GameState {
@@ -37,26 +33,4 @@ export type GameEventType =
 export interface GameEvent {
   type: GameEventType;
   payload?: Record<string, number>;
-}
-
-/**
- * A "skin" is the entire presentation-layer contract for a product
- * variant. It maps abstract engine state onto product-specific visuals,
- * labels, and movement direction — never the other way around.
- */
-export interface GameSkin {
-  id: string;
-  productName: string;
-  /** Long-form label for the attack stat, e.g. "Sword Damage". */
-  attackLabel: string;
-  /** Short badge label for the attack stat, e.g. "ATK". */
-  attackShortLabel: string;
-  /** Which way the hero/player-aligned unit visually travels. */
-  heroVerticalDirection: 'up' | 'down';
-  /** Which way enemies visually travel. */
-  enemyVerticalDirection: 'up' | 'down';
-  floorLabel: (floor: number) => string;
-  enemyLabel: string;
-  wallLabel: string;
-  wallSubLabel: string;
 }

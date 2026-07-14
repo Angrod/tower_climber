@@ -3,14 +3,13 @@ import { StyleSheet, Text } from 'react-native';
 import Animated, { FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
-import type { GameSkin } from '@/lib/engine/types';
+import { gameCopy } from '@/constants/gameCopy';
 
 interface WallBannerProps {
   visible: boolean;
-  skin: GameSkin;
 }
 
-export function WallBanner({ visible, skin }: WallBannerProps) {
+export function WallBanner({ visible }: WallBannerProps) {
   const colors = useColors();
   if (!visible) return null;
 
@@ -24,8 +23,8 @@ export function WallBanner({ visible, skin }: WallBannerProps) {
       ]}
     >
       <MaterialCommunityIcons name="shield-alert" size={18} color="#FFFFFF" />
-      <Text style={styles.title}>{skin.wallLabel.toUpperCase()}</Text>
-      <Text style={styles.subtitle}>{skin.wallSubLabel}</Text>
+      <Text style={styles.title}>{gameCopy.wallLabel.toUpperCase()}</Text>
+      <Text style={styles.subtitle}>{gameCopy.wallSubLabel}</Text>
     </Animated.View>
   );
 }
