@@ -1,0 +1,29 @@
+Here's a task written in the same format as the Sellswords one, ready to hand over as-is:
+
+Add the Hero summon system — tap-to-spawn, cap, resummon, and rare variant
+What & Why
+Heroes are the tap-summoned unit, distinct from Soldiers (auto-spawn, covered in the Sellswords task). The Core Climb Loop milestone already has a single placeholder tap-to-attack unit; this task formalizes it into the real system: a concurrent-hero cap governed by the Summon skill, resummon-on-death (not permanent loss), and a rare stronger variant that can spawn instead of a normal hero.
+Done looks like
+
+Tapping the climb screen summons a Hero, up to a concurrent cap: Max Concurrent Heroes = Base Pool + 2 × Summon Skill Level
+A Hero killed by an enemy becomes inactive and frees its summon slot — it is not permanently lost. Tapping again resummons into that freed slot.
+A Heroes tab shows current/max concurrent heroes, and the Summon skill's level and upgrade cost, using the formula above
+A rare stronger Hero variant can spawn instead of a normal Hero on tap, at a rate controlled by its own skill (mechanic equivalent to what the source game calls its "berserker summon" skill — do not reuse that name; give this variant and its skill original IDs and display names, same as every other renamed system)
+Hero base stats (attack/HP) are placeholder values for now, clearly isolated in the engine's data layer (not inlined in formulas or logic) — same treatment as the existing Player base HP/damage placeholder, since no verified per-hero-type reference data exists yet. Flag clearly for later replacement, don't treat as final.
+The Power Up skill's multiplier applies to Hero stats through the same shared multiplier logic already used for Soldiers — not a duplicated calculation
+Hero state (current count, Summon level, variant-spawn skill level) persists via the existing AsyncStorage save
+
+Out of scope
+
+A full named Hero "roster" like the 7-unit Sellswords lineup — Heroes are a single unit type plus one rare variant, not a multi-class system, unless real reference data later justifies expanding it
+The Fame skill (hero attack scaling off total soldier attack) — this has a real dependency on Soldiers being implemented first; note it as a follow-up task once Soldiers state exists, don't build it against a guess
+Growth Speed, Doping, Rain of Gold, Warp, Ultimate Summon — separate skill tasks
+
+Relevant files
+
+artifacts/collectors-tower/lib/engine/
+artifacts/collectors-tower/app/(tabs)/heroes.tsx
+artifacts/collectors-tower/context/GameContext.tsx
+
+Notes
+No multi-product/reskin justification for any of this — same one-game scope as the rest of the build. If anything here overlaps with logic already built for Soldiers (leveling, cap math, persistence pattern), reuse that pattern rather than reimplementing it separately.
