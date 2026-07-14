@@ -1,0 +1,23 @@
+kind = "mobile"
+previewPath = "/"
+title = "Collector's Tower"
+version = "1.0.0"
+id = "artifacts/collectors-tower"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/" ]
+localPort = 18625
+
+[services.development]
+run = "pnpm --filter @workspace/collectors-tower run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/collectors-tower", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/collectors-tower", "run", "serve" ]
+
+[services.env]
+PORT = "18625"
+BASE_PATH = "/"
