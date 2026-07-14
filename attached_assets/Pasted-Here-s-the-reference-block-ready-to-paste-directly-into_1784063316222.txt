@@ -1,0 +1,39 @@
+Here's the reference block, ready to paste directly into Replit:
+Soldier reference data — Levels 1 / 10 / 50 / 100 (source: reverse-engineered community data from the original game, not fully verified — flag any gaps rather than filling them in)
+
+Swordsman
+HP: 36 / 697 / 6,006 / 142,120
+ATK: 23 / 679 / 7,956 / 178,185
+Speed: 1.00 / 1.04 / 1.07 / 1.09
+Spawn Rate: 6.0s / 5.0s / 4.8s / 4.6s
+
+Archer
+HP: 151 / 3,711 / 36,625 / 921,476
+ATK: 98 / 5,078 / 49,153 / 1,225,000
+Speed: 1.25 / 1.29 / 1.32 / 1.34
+Spawn Rate: 7.0s / 5.9s / 5.6s / 5.5s
+
+Ninja
+HP: 1,093 / 5,634 / 287,431 / [not provided]
+ATK: 660 / 3,242 / 357,856 / [not provided]
+Speed: 1.55 / 1.56 / 1.62 / [not provided]
+Spawn Rate: 8.0s / 7.9s / 6.5s / [not provided]
+
+Knight
+HP: 9,011 / [not provided] / 2,395,000 / 60,905,000
+ATK: 5,328 / [not provided] / 2,921,000 / 74,265,000
+Speed: 1.10 / [not provided] / 1.17 / 1.19
+Spawn Rate: 8.5s / [not provided] / 6.9s / 6.7s
+
+Monk
+HP: 87,328 / 2,288,000 / 23,247,000 / 591,720,000
+ATK: 51,620 / 2,821,000 / 28,349,000 / 720,758,000
+Speed: 1.10 / 1.14 / 1.17 / 1.19
+Spawn Rate: 9.0s / 7.6s / 7.3s / 7.2s
+
+Instructions for using this data:
+- These five units map onto the Sellswords roster (Squire/Footman/Archer/Knight/Druid/Witch/Wizard) via the ID/display-name split — do not use these original names directly in the build.
+- Derive each unit's own per-level growth curve from this data rather than applying one shared multiplier across all units — growth rate is not constant even within one unit (e.g. Swordsman's HP grows ~5.5%/level between levels 10-50, but ~6.5%/level between levels 50-100, consistent with a wall/breakpoint effect around level 100).
+- Tier-to-tier, both starting power AND growth rate increase (Archer starts ~4x Swordsman's stats at level 1, but the gap widens to ~6.5x by level 100) — model each unit with its own curve, not a flat multiplier applied to a shared base curve.
+- Speed and Spawn Rate are not correlated with power tier — Archer/Ninja are faster than Knight/Monk despite being weaker, and spawn rate appears to approach a floor rather than decreasing indefinitely. Treat these as independent "personality" stats per unit, separate from the power curve.
+- [not provided] gaps are real gaps in the source data, not zeros — do not interpolate a value for them without flagging it as an estimate.
