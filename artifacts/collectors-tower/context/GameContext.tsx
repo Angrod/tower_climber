@@ -28,6 +28,12 @@ import {
   purchaseBoost as purchaseBoostEngine,
   purchaseFireSword as purchaseFireSwordEngine,
 } from '@/lib/engine/shopEngine';
+import {
+  createInitialGearState,
+  equipGear as equipGearEngine,
+  unequipGear as unequipGearEngine,
+} from '@/lib/engine/gearEngine';
+import { WEAPON_ROSTER } from '@/lib/engine/gearData';
 import type { GameEvent, GameState, SoldierId } from '@/lib/engine/types';
 
 const STORAGE_KEY = 'collectors-tower.game-state.v1';
@@ -39,12 +45,22 @@ export interface DamagePopup {
   amount: number;
 }
 
+export interface GearDropToast {
+  id: string;
+  itemId: string;
+  isNew: boolean;
+  level: number;
+}
+
+const GEAR_TOAST_LIFETIME_MS = 2200;
+
 interface GameContextValue {
   state: GameState;
   isLoaded: boolean;
   damagePopups: DamagePopup[];
   wallBannerVisible: boolean;
   soldierWallBannerName: SoldierId | null;
+  gearDropToast: GearDropToast | null;
   tapAttack: () => void;
   toggleAutoAttack: () => void;
   recruitSoldier: (id: SoldierId) => void;
@@ -53,6 +69,8 @@ interface GameContextValue {
   purchaseFireSword: () => void;
   grantRewardedAdReward: () => void;
   markAdsRemoved: () => void;
+  equipGear: (itemId: string) => void;
+  unequipGear: (itemId: string) => void;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -100,6 +118,30 @@ function normalizeLoadedState(parsed: unknown): GameState {
     }
   }
 
+  // Gear didn't exist on older saves — validate every owned entry
+  // against the live roster so a stale/renamed item id can't corrupt
+  // the family-stacking math or crash the Weapons tab.
+  const validItemIds = new Set(WEAPON_ROSTER.map((item) => item.id));
+  const rawOwned = raw.gear?.owned;
+  const owned: GameState['gear']['owned'] = {};
+  if (rawOwned && typeof rawOwned === 'object') {
+    for (const [itemId, itemState] of Object.entries(rawOwned)) {
+      const level = itemState?.level;
+      if (
+        validItemIds.has(itemId) &&
+        typeof level === 'number' &&
+        Number.isFinite(level) &&
+        level >= 1
+      ) {
+        owned[itemId] = { level };
+      }
+    }
+  }
+  const rawEquipped = raw.gear?.equippedIds;
+  const equippedIds = Array.isArray(rawEquipped)
+    ? rawEquipped.filter((id): id is string => typeof id === 'string' && !!owned[id])
+    : createInitialGearState().equippedIds;
+
   return {
     ...fresh,
     ...raw,
@@ -110,6 +152,7 @@ function normalizeLoadedState(parsed: unknown): GameState {
     fireSwordOwned,
     lastDailyLoginDate,
     adsRemoved,
+    gear: { owned, equippedIds },
   };
 }
 
@@ -120,6 +163,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [wallBannerVisible, setWallBannerVisible] = useState(false);
   const [soldierWallBannerName, setSoldierWallBannerName] =
     useState<SoldierId | null>(null);
+  const [gearDropToast, setGearDropToast] = useState<GearDropToast | null>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
 
@@ -176,6 +220,19 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(
           () => {},
         );
+      }
+      if ((event.type === 'gearDropped' || event.type === 'gearLeveledUp') && event.itemId) {
+        const toast: GearDropToast = {
+          id: makeId(),
+          itemId: event.itemId,
+          isNew: event.type === 'gearDropped',
+          level: event.payload?.level ?? 1,
+        };
+        setGearDropToast(toast);
+        setTimeout(() => {
+          setGearDropToast((prev) => (prev?.id === toast.id ? null : prev));
+        }, GEAR_TOAST_LIFETIME_MS);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       }
     }
   }, []);
@@ -247,6 +304,22 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => markAdsRemovedEngine(prev).state);
   }, []);
 
+  const equipGear = useCallback((itemId: string) => {
+    const before = stateRef.current;
+    const result = equipGearEngine(before, itemId);
+    if (result.state === before) return;
+    setState(result.state);
+    Haptics.selectionAsync().catch(() => {});
+  }, []);
+
+  const unequipGear = useCallback((itemId: string) => {
+    const before = stateRef.current;
+    const result = unequipGearEngine(before, itemId);
+    if (result.state === before) return;
+    setState(result.state);
+    Haptics.selectionAsync().catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (!state.autoAttackActive) return;
     const interval = setInterval(() => {
@@ -264,6 +337,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       damagePopups,
       wallBannerVisible,
       soldierWallBannerName,
+      gearDropToast,
       tapAttack,
       toggleAutoAttack,
       recruitSoldier,
@@ -272,6 +346,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       purchaseFireSword,
       grantRewardedAdReward,
       markAdsRemoved,
+      equipGear,
+      unequipGear,
     }),
     [
       state,
@@ -279,6 +355,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       damagePopups,
       wallBannerVisible,
       soldierWallBannerName,
+      gearDropToast,
       tapAttack,
       toggleAutoAttack,
       recruitSoldier,
@@ -287,6 +364,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       purchaseFireSword,
       grantRewardedAdReward,
       markAdsRemoved,
+      equipGear,
+      unequipGear,
     ],
   );
 

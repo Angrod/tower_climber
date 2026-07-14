@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { useGame } from '@/context/GameContext';
 import { isWallFloor, AUTO_ATTACK_UNLOCK_FLOOR } from '@/lib/engine/formulas';
+import { getEffectiveAttackPower } from '@/lib/engine/shopFormulas';
 import { gameCopy } from '@/constants/gameCopy';
 import { StatBar } from '@/components/game/StatBar';
 import { WallBanner } from '@/components/game/WallBanner';
@@ -45,7 +46,7 @@ export default function ClimbScreen() {
           </Text>
           <StatBar
             floor={state.floor}
-            attackPower={state.attackPower}
+            attackPower={Math.round(getEffectiveAttackPower(state) * 10) / 10}
             floorsCleared={state.floorsCleared}
           />
         </View>

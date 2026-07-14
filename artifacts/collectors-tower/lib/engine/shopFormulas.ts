@@ -10,6 +10,7 @@
  *   ads, spent on Shop boosts and the Fire Sword.
  */
 
+import { getGearAttackMultiplier } from './gearFormulas';
 import type { GameState } from './types';
 
 /** Shop Currency granted once per calendar day on first open. */
@@ -49,7 +50,14 @@ export function boostMsRemaining(state: GameState, now: number = Date.now()): nu
   return Math.max(0, (state.boostActiveUntil as number) - now);
 }
 
-/** Attack power after applying an active Power Surge boost, if any. */
+/**
+ * Attack power after applying equipped-gear family stacking and any
+ * active Power Surge boost. Gear multiplies first (base × gear
+ * multiplier), then the boost multiplies on top — consistent with the
+ * "gear stacks, then account-wide effects multiply last" order from
+ * the progression model.
+ */
 export function getEffectiveAttackPower(state: GameState, now: number = Date.now()): number {
-  return isBoostActive(state, now) ? state.attackPower * BOOST_MULTIPLIER : state.attackPower;
+  const gearAdjusted = state.attackPower * getGearAttackMultiplier(state.gear);
+  return isBoostActive(state, now) ? gearAdjusted * BOOST_MULTIPLIER : gearAdjusted;
 }

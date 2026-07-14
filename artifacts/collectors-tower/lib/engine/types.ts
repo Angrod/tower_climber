@@ -41,6 +41,20 @@ export interface GameState {
   lastDailyLoginDate: string | null;
   /** Whether the player purchased the one-time ad-free buyout — the only real-money purchase in the game. */
   adsRemoved: boolean;
+  /** Weapon/gear collection — see lib/engine/gearFormulas.ts for the family-stacking math. */
+  gear: GearState;
+}
+
+/** Per-item collection progress. Level starts at 1 on first drop; a repeat drop increments it rather than duplicating the entry. */
+export interface GearItemState {
+  level: number;
+}
+
+export interface GearState {
+  /** Keyed by WeaponDefinition.id. Presence in this map means the item has been collected at least once. */
+  owned: Record<string, GearItemState>;
+  /** Item ids currently equipped. Only equipped items contribute to the attack multiplier. */
+  equippedIds: string[];
 }
 
 /**
@@ -78,9 +92,15 @@ export type GameEventType =
   | 'dailyLoginClaimed'
   | 'boostPurchased'
   | 'fireSwordPurchased'
-  | 'adsRemoved';
+  | 'adsRemoved'
+  | 'gearDropped'
+  | 'gearLeveledUp'
+  | 'gearEquipped'
+  | 'gearUnequipped';
 
 export interface GameEvent {
   type: GameEventType;
   payload?: Record<string, number>;
+  /** Item id this event concerns — only set for gear events, kept separate from the numeric payload. */
+  itemId?: string;
 }

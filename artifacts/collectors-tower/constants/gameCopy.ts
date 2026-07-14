@@ -73,4 +73,23 @@ export const gameCopy = {
 
   bannerAdLabel: 'Advertisement',
   bannerAdPlaceholder: 'Your ad could be here',
+
+  weaponsTitle: 'Weapons',
+  weaponsSubtitle: 'Collection log',
+  weaponsMultiplierLabel: 'Gear Multiplier',
+  weaponsUndiscoveredLabel: '???',
+  weaponsUndiscoveredBody: 'Undiscovered — keep clearing floors to find it.',
+  weaponsLevelLabel: (level: number) => `Lv. ${level}`,
+  weaponsEquippedLabel: 'Equipped',
+  weaponsEquipLabel: 'Equip',
+  weaponsUnequipLabel: 'Unequip',
+  weaponsFamilyBonusLabel: (percent: string) => `+${percent}% family bonus`,
+  weaponsFamilyMultiplierLabel: (multiplier: string) => `×${multiplier}`,
+  weaponsCompareIfEquippedLabel: (multiplier: string) => `Equip for ×${multiplier} total`,
+  weaponsCompareIfUnequippedLabel: (multiplier: string) => `Unequip → ×${multiplier} total`,
+  weaponsDropNewLabel: (name: string) => `New item: ${name}!`,
+  weaponsDropLeveledUpLabel: (name: string, level: number) => `${name} → Lv. ${level}!`,
+  weaponsOwnedCountLabel: (owned: number, total: number) => `${owned} / ${total} discovered`,
+  weaponsDetailTitle: 'Item Details',
+  weaponsCloseLabel: 'Close',
 };

@@ -15,6 +15,7 @@ import {
 } from './formulas';
 import { createInitialSoldiersState } from './soldierEngine';
 import { getEffectiveAttackPower } from './shopFormulas';
+import { createInitialGearState, dropGearFromChest } from './gearEngine';
 import type { GameEvent, GameState } from './types';
 
 export function createInitialState(): GameState {
@@ -36,6 +37,7 @@ export function createInitialState(): GameState {
     fireSwordOwned: false,
     lastDailyLoginDate: null,
     adsRemoved: false,
+    gear: createInitialGearState(),
   };
 }
 
@@ -60,7 +62,7 @@ function applyDamage(state: GameState, amount: number): EngineResult {
   const goldReward = getGoldReward(state.floor);
   const nextFloor = state.floor + 1;
   const nextMaxHp = getEnemyMaxHp(nextFloor);
-  const nextState: GameState = {
+  const stateAfterClear: GameState = {
     ...state,
     floor: nextFloor,
     enemyMaxHp: nextMaxHp,
@@ -76,7 +78,12 @@ function applyDamage(state: GameState, amount: number): EngineResult {
     events.push({ type: 'wallReached', payload: { floor: nextFloor } });
   }
 
-  return { state: nextState, events };
+  // Every floor clear opens a loot chest — gear drop resolution lives
+  // entirely in gearEngine/gearFormulas so this stays a single call.
+  const dropResult = dropGearFromChest(stateAfterClear);
+  events.push(...dropResult.events);
+
+  return { state: dropResult.state, events };
 }
 
 /** A manual player tap. Counts toward lifetime tap stats. */
