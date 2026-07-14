@@ -4,7 +4,11 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { gameCopy } from '@/constants/gameCopy';
 import type { SoldierDefinition } from '@/lib/engine/soldierData';
-import { getSoldierPower, isSoldierAtWall } from '@/lib/engine/soldierFormulas';
+import {
+  getSoldierPower,
+  getSoldierWallLevel,
+  isSoldierAtWall,
+} from '@/lib/engine/soldierFormulas';
 
 interface SoldierCardProps {
   definition: SoldierDefinition;
@@ -24,6 +28,7 @@ export function SoldierCard({
   const colors = useColors();
   const recruited = level > 0;
   const atWall = recruited && isSoldierAtWall(level);
+  const wallLevel = atWall ? getSoldierWallLevel(level) : null;
   const power = getSoldierPower(definition, level);
   const canAfford = gold >= actionCost;
 
@@ -60,7 +65,7 @@ export function SoldierCard({
               <Text
                 style={[styles.badgeText, { color: colors.primaryForeground }]}
               >
-                {gameCopy.soldierMaxLevelLabel}
+                {gameCopy.soldierMaxLevelLabel(wallLevel ?? level)}
               </Text>
             </View>
           )}

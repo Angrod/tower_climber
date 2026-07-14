@@ -60,6 +60,7 @@ interface GameContextValue {
   damagePopups: DamagePopup[];
   wallBannerVisible: boolean;
   soldierWallBannerName: SoldierId | null;
+  soldierWallBannerLevel: number | null;
   gearDropToast: GearDropToast | null;
   tapAttack: () => void;
   toggleAutoAttack: () => void;
@@ -163,6 +164,9 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
   const [wallBannerVisible, setWallBannerVisible] = useState(false);
   const [soldierWallBannerName, setSoldierWallBannerName] =
     useState<SoldierId | null>(null);
+  const [soldierWallBannerLevel, setSoldierWallBannerLevel] = useState<
+    number | null
+  >(null);
   const [gearDropToast, setGearDropToast] = useState<GearDropToast | null>(null);
   const stateRef = useRef(state);
   stateRef.current = state;
@@ -265,12 +269,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     if (result.state === before) return;
     setState(result.state);
     Haptics.selectionAsync().catch(() => {});
-    const reachedWall = result.events.some(
+    const wallEvent = result.events.find(
       (event) => event.type === 'soldierWallReached',
     );
-    if (reachedWall) {
+    if (wallEvent) {
       setSoldierWallBannerName(id);
-      setTimeout(() => setSoldierWallBannerName(null), WALL_BANNER_LIFETIME_MS);
+      setSoldierWallBannerLevel(wallEvent.payload?.level ?? null);
+      setTimeout(() => {
+        setSoldierWallBannerName(null);
+        setSoldierWallBannerLevel(null);
+      }, WALL_BANNER_LIFETIME_MS);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(
         () => {},
       );
@@ -337,6 +345,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       damagePopups,
       wallBannerVisible,
       soldierWallBannerName,
+      soldierWallBannerLevel,
       gearDropToast,
       tapAttack,
       toggleAutoAttack,
@@ -355,6 +364,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       damagePopups,
       wallBannerVisible,
       soldierWallBannerName,
+      soldierWallBannerLevel,
       gearDropToast,
       tapAttack,
       toggleAutoAttack,

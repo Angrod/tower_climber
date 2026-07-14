@@ -13,8 +13,14 @@ import { WallBanner } from '@/components/game/WallBanner';
 export default function SoldiersScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { state, isLoaded, soldierWallBannerName, recruitSoldier, levelUpSoldier } =
-    useGame();
+  const {
+    state,
+    isLoaded,
+    soldierWallBannerName,
+    soldierWallBannerLevel,
+    recruitSoldier,
+    levelUpSoldier,
+  } = useGame();
 
   const webTopInset = Platform.OS === 'web' ? 67 : 0;
   const webBottomInset = Platform.OS === 'web' ? 34 : 0;
@@ -36,7 +42,14 @@ export default function SoldiersScreen() {
         icon="trophy"
         tone="success"
         title={gameCopy.soldierWallTitle}
-        subtitle={wallSoldierName ? gameCopy.soldierWallSubLabel(wallSoldierName) : ''}
+        subtitle={
+          wallSoldierName
+            ? gameCopy.soldierWallSubLabel(
+                wallSoldierName,
+                soldierWallBannerLevel ?? 100,
+              )
+            : ''
+        }
       />
 
       <ScrollView

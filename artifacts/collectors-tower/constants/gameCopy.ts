@@ -16,12 +16,13 @@ export const gameCopy = {
   goldLabel: 'Gold',
   notRecruitedLabel: 'Not Recruited',
   soldierLevelLabel: (level: number) => `Lv. ${level}`,
-  soldierMaxLevelLabel: 'MAX LVL',
+  soldierMaxLevelLabel: (wallLevel: number) => `LVL ${wallLevel} WALL`,
   soldierPowerLabel: 'Power',
   recruitButtonLabel: (cost: number) => `Recruit — ${cost}g`,
   levelUpButtonLabel: (cost: number) => `Level Up — ${cost}g`,
   soldierWallTitle: 'Level Wall',
-  soldierWallSubLabel: (name: string) => `${name} has hit the Level 100 wall`,
+  soldierWallSubLabel: (name: string, wallLevel: number) =>
+    `${name} has hit the Level ${wallLevel} wall`,
 
   shopTitle: 'Shop',
   shopCurrencyLabel: 'Shop Currency',
