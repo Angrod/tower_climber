@@ -1,0 +1,19 @@
+1. COMPONENT POSITIONING & LAYOUT
+Header (Top 12%): Flexbox row. Left: Gold counter (icon + value). Center-Left: Hero count (X/Y) and Soldier count. Center-Right: Top Floor reached and Monster Seal level. Right: Shop/Settings buttons.
+Active Viewport (Center 60%): Vertical tower cross-section. Floors are stacked sprites, numbered incrementally. Camera follows the highest-active hero. Background consists of sky and parallax mountain layers.
+Upgrade Panel (Bottom 28%): Fixed container. Header: Horizontal tab bar (Heroes, Soldiers, Items, Skills, Shop). Body: Scrollable vertical list of upgrade cards. Card Layout: Icon (left), Name/Level (top-center), Stats (bottom-center), Affordability button (right).
+2. COMPONENT STATES & TOGGLES
+Tab System: Clicking a tab swaps the scrollable list data without reloading the viewport. Selected tab uses a "pressed" or "highlighted" sprite state.
+Upgrade Buttons: Toggle between "Level Up" (shows gold cost) and "GET" (to unlock). Grayed out/disabled state triggers if gold < required cost.
+Modal Overlay: "Equippable Items" triggers a centered, opaque pop-up. Dimmed background shader applied to tower viewport.
+Floating Warnings: "Summon level not high enough!" appears as a centered red text layer when tap limits are reached.
+3. MOTION LANGUAGE & TIMING
+Hero Summoning: Translation from entrance (Floor 0) to current floor. Movement speed = Y-axis increment * speed_stat. Linear interpolation.
+Combat Feedback: Damage numbers spawn at hit coordinates. Velocity: Upward (Y - 50px). Duration: 0.8s. Curve: Ease-out. End State: Opacity 0.
+Gold Drops: Circular particles explode from dead monsters. Velocity: Parabolic arc toward header gold icon. Timing: 0.5s total flight time.
+Camera Scroll: Constant vertical tracking. Responds to the highest hero's position with a 0.2s smoothing delay.
+4. AUDIO CORRELATION
+Summoning: Rapid floor tapping produces a white radial flash; triggers "Summon" SFX.
+Success/Unlock: "Level Up" button pulse correlates with an "Upgrade" chime.
+Error State: Red warning text flashes; triggers a low-frequency error buzz.
+Floor Clear: Camera vertical shift speed increase implies an "Advance" stinger.
