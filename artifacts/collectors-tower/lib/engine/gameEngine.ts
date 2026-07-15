@@ -16,6 +16,8 @@ import {
 import { createInitialSoldiersState } from './soldierEngine';
 import { getEffectiveAttackPower } from './shopFormulas';
 import { createInitialGearState, dropGearFromChest } from './gearEngine';
+import { createInitialHeroesState, maybeDefeatHero, summonHero } from './heroEngine';
+import { getActiveHeroesAttack } from './heroFormulas';
 import type { GameEvent, GameState } from './types';
 
 export function createInitialState(): GameState {
@@ -38,6 +40,7 @@ export function createInitialState(): GameState {
     lastDailyLoginDate: null,
     adsRemoved: false,
     gear: createInitialGearState(),
+    heroes: createInitialHeroesState(),
   };
 }
 
@@ -86,12 +89,26 @@ function applyDamage(state: GameState, amount: number): EngineResult {
   return { state: dropResult.state, events };
 }
 
-/** A manual player tap. Counts toward lifetime tap stats. */
-export function applyManualTap(state: GameState): EngineResult {
-  const result = applyDamage(state, getEffectiveAttackPower(state));
+/**
+ * A manual player tap. Counts toward lifetime tap stats. Also attempts
+ * to summon a Hero into any free concurrent slot, then rolls the
+ * placeholder death-risk check that frees a slot for future resummons
+ * (see heroEngine.ts `maybeDefeatHero` for why this stands in for real
+ * enemy retaliation). Total damage is the Player's effective attack
+ * plus every currently-active Hero's effective attack.
+ */
+export function applyManualTap(state: GameState, rng: () => number = Math.random): EngineResult {
+  const summonResult = summonHero(state, rng);
+  const deathResult = maybeDefeatHero(summonResult.state, rng);
+  const stateBeforeDamage = deathResult.state;
+
+  const totalDamage =
+    getEffectiveAttackPower(stateBeforeDamage) + getActiveHeroesAttack(stateBeforeDamage);
+  const damageResult = applyDamage(stateBeforeDamage, totalDamage);
+
   return {
-    state: { ...result.state, totalTaps: result.state.totalTaps + 1 },
-    events: result.events,
+    state: { ...damageResult.state, totalTaps: damageResult.state.totalTaps + 1 },
+    events: [...summonResult.events, ...deathResult.events, ...damageResult.events],
   };
 }
 

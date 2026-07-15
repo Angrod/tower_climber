@@ -34,7 +34,12 @@ import {
   unequipGear as unequipGearEngine,
 } from '@/lib/engine/gearEngine';
 import { WEAPON_ROSTER } from '@/lib/engine/gearData';
-import type { GameEvent, GameState, SoldierId } from '@/lib/engine/types';
+import {
+  createInitialHeroesState,
+  upgradeSummonSkill as upgradeSummonSkillEngine,
+  upgradeVariantSkill as upgradeVariantSkillEngine,
+} from '@/lib/engine/heroEngine';
+import type { GameEvent, GameState, HeroInstance, SoldierId } from '@/lib/engine/types';
 
 const STORAGE_KEY = 'collectors-tower.game-state.v1';
 const DAMAGE_POPUP_LIFETIME_MS = 700;
@@ -72,6 +77,8 @@ interface GameContextValue {
   markAdsRemoved: () => void;
   equipGear: (itemId: string) => void;
   unequipGear: (itemId: string) => void;
+  upgradeSummonSkill: () => void;
+  upgradeVariantSkill: () => void;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -143,6 +150,39 @@ function normalizeLoadedState(parsed: unknown): GameState {
     ? rawEquipped.filter((id): id is string => typeof id === 'string' && !!owned[id])
     : createInitialGearState().equippedIds;
 
+  // Heroes didn't exist on older saves — validate every field so a
+  // missing/malformed hero block falls back to a fresh state instead of
+  // corrupting the promotion/summon math or crashing the Heroes tab.
+  const rawHeroes = raw.heroes;
+  const heroLevel =
+    typeof rawHeroes?.level === 'number' && Number.isFinite(rawHeroes.level) && rawHeroes.level >= 0
+      ? rawHeroes.level
+      : createInitialHeroesState().level;
+  const summonSkillLevel =
+    typeof rawHeroes?.summonSkillLevel === 'number' &&
+    Number.isFinite(rawHeroes.summonSkillLevel) &&
+    rawHeroes.summonSkillLevel >= 0
+      ? rawHeroes.summonSkillLevel
+      : createInitialHeroesState().summonSkillLevel;
+  const variantSkillLevel =
+    typeof rawHeroes?.variantSkillLevel === 'number' &&
+    Number.isFinite(rawHeroes.variantSkillLevel) &&
+    rawHeroes.variantSkillLevel >= 0
+      ? rawHeroes.variantSkillLevel
+      : createInitialHeroesState().variantSkillLevel;
+  const rawInstances = rawHeroes?.instances;
+  const instances: HeroInstance[] = Array.isArray(rawInstances)
+    ? rawInstances
+        .filter(
+          (instance): instance is HeroInstance =>
+            !!instance &&
+            typeof instance.id === 'string' &&
+            typeof instance.active === 'boolean' &&
+            typeof instance.isVariant === 'boolean',
+        )
+        .map((instance) => ({ ...instance }))
+    : [];
+
   return {
     ...fresh,
     ...raw,
@@ -154,6 +194,7 @@ function normalizeLoadedState(parsed: unknown): GameState {
     lastDailyLoginDate,
     adsRemoved,
     gear: { owned, equippedIds },
+    heroes: { instances, level: heroLevel, summonSkillLevel, variantSkillLevel },
   };
 }
 
@@ -328,6 +369,22 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     Haptics.selectionAsync().catch(() => {});
   }, []);
 
+  const upgradeSummonSkill = useCallback(() => {
+    const before = stateRef.current;
+    const result = upgradeSummonSkillEngine(before);
+    if (result.state === before) return;
+    setState(result.state);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+  }, []);
+
+  const upgradeVariantSkill = useCallback(() => {
+    const before = stateRef.current;
+    const result = upgradeVariantSkillEngine(before);
+    if (result.state === before) return;
+    setState(result.state);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (!state.autoAttackActive) return;
     const interval = setInterval(() => {
@@ -357,6 +414,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       markAdsRemoved,
       equipGear,
       unequipGear,
+      upgradeSummonSkill,
+      upgradeVariantSkill,
     }),
     [
       state,
@@ -376,6 +435,8 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       markAdsRemoved,
       equipGear,
       unequipGear,
+      upgradeSummonSkill,
+      upgradeVariantSkill,
     ],
   );
 

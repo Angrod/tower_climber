@@ -51,6 +51,19 @@ export function boostMsRemaining(state: GameState, now: number = Date.now()): nu
 }
 
 /**
+ * The shared "Power Up" multiplier — equipped-gear family stacking
+ * times any active Power Surge boost. This is the one place that
+ * combination is computed; every unit's effective combat stat (Player,
+ * and now Hero — see heroFormulas.ts `getEffectiveHeroAttack`) must
+ * multiply its base stat by this function's result rather than
+ * re-deriving gear/boost math itself.
+ */
+export function getSharedCombatMultiplier(state: GameState, now: number = Date.now()): number {
+  const gearMultiplier = getGearAttackMultiplier(state.gear);
+  return isBoostActive(state, now) ? gearMultiplier * BOOST_MULTIPLIER : gearMultiplier;
+}
+
+/**
  * Attack power after applying equipped-gear family stacking and any
  * active Power Surge boost. Gear multiplies first (base × gear
  * multiplier), then the boost multiplies on top — consistent with the
@@ -58,6 +71,5 @@ export function boostMsRemaining(state: GameState, now: number = Date.now()): nu
  * the progression model.
  */
 export function getEffectiveAttackPower(state: GameState, now: number = Date.now()): number {
-  const gearAdjusted = state.attackPower * getGearAttackMultiplier(state.gear);
-  return isBoostActive(state, now) ? gearAdjusted * BOOST_MULTIPLIER : gearAdjusted;
+  return state.attackPower * getSharedCombatMultiplier(state, now);
 }

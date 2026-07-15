@@ -8,6 +8,8 @@ interface StatBarProps {
   floor: number;
   attackPower: number;
   floorsCleared: number;
+  activeHeroes: number;
+  maxHeroes: number;
 }
 
 function StatPill({
@@ -42,7 +44,13 @@ function StatPill({
   );
 }
 
-export function StatBar({ floor, attackPower, floorsCleared }: StatBarProps) {
+export function StatBar({
+  floor,
+  attackPower,
+  floorsCleared,
+  activeHeroes,
+  maxHeroes,
+}: StatBarProps) {
   const colors = useColors();
   return (
     <View style={styles.row}>
@@ -57,6 +65,12 @@ export function StatBar({ floor, attackPower, floorsCleared }: StatBarProps) {
         label={gameCopy.attackShortLabel}
         value={String(attackPower)}
         tint={colors.destructive}
+      />
+      <StatPill
+        icon="account-group"
+        label="Heroes"
+        value={`${activeHeroes}/${maxHeroes}`}
+        tint={colors.mutedForeground}
       />
       <StatPill
         icon="trophy-outline"

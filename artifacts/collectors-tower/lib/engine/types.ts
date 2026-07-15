@@ -43,6 +43,8 @@ export interface GameState {
   adsRemoved: boolean;
   /** Weapon/gear collection — see lib/engine/gearFormulas.ts for the family-stacking math. */
   gear: GearState;
+  /** Hero summon/promotion progression — see lib/engine/heroFormulas.ts. */
+  heroes: HeroesState;
 }
 
 /** Per-item collection progress. Level starts at 1 on first drop; a repeat drop increments it rather than duplicating the entry. */
@@ -96,7 +98,55 @@ export type GameEventType =
   | 'gearDropped'
   | 'gearLeveledUp'
   | 'gearEquipped'
-  | 'gearUnequipped';
+  | 'gearUnequipped'
+  | 'heroSummoned'
+  | 'heroVariantSummoned'
+  | 'heroDefeated'
+  | 'heroPromoted'
+  | 'summonSkillUpgraded'
+  | 'variantSkillUpgraded';
+
+/**
+ * The Hero promotion track. Every tier has a permanent id used by all
+ * engine logic — `name` is a freely-renameable display string, same
+ * id/display split as `SoldierId`/`SoldierDefinition.name` and
+ * `WeaponDefinition.id`/`name`. Never match logic on `name`.
+ */
+export type HeroRankId =
+  | 'hero_rank_1'
+  | 'hero_rank_2'
+  | 'hero_rank_3'
+  | 'hero_rank_4'
+  | 'hero_rank_5'
+  | 'hero_rank_6';
+
+/**
+ * One summon-slot occupant. Instances are never removed once created —
+ * a defeated Hero flips `active` to false and stays in the array so its
+ * slot can be resummoned into, per the "not permanently lost" design.
+ */
+export interface HeroInstance {
+  id: string;
+  active: boolean;
+  /** Whether this occupant is the rare stronger variant, not a normal Hero. */
+  isVariant: boolean;
+}
+
+export interface HeroesState {
+  /** Summon slots. Length is capped at the current max concurrent count; dead slots persist as `active: false` for resummoning. */
+  instances: HeroInstance[];
+  /**
+   * Lifetime count of successful summons — the single shared "Hero
+   * level" that drives the promotion title track (see
+   * lib/engine/heroFormulas.ts). All active Heroes share this one
+   * level; there is no per-instance leveling.
+   */
+  level: number;
+  /** Summon skill level — raises Max Concurrent Heroes. */
+  summonSkillLevel: number;
+  /** Rare-variant spawn-rate skill level. */
+  variantSkillLevel: number;
+}
 
 export interface GameEvent {
   type: GameEventType;
