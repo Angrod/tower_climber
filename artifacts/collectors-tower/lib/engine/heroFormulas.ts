@@ -7,6 +7,9 @@
 
 import {
   BASE_HERO_POOL,
+  FAME_BONUS_PER_LEVEL,
+  FAME_SKILL_BASE_COST,
+  FAME_SKILL_COST_GROWTH,
   HERO_BASE_ATTACK,
   HERO_BASE_HP,
   HERO_POOL_PER_SUMMON_LEVEL,
@@ -22,6 +25,7 @@ import {
   type HeroRankDefinition,
 } from './heroData';
 import { getSharedCombatMultiplier } from './shopFormulas';
+import { getTotalSoldierAttack } from './soldierFormulas';
 import type { GameState } from './types';
 
 /**
@@ -89,6 +93,23 @@ export function getVariantSkillUpgradeCost(variantSkillLevel: number): number {
   return Math.round(VARIANT_SKILL_BASE_COST * Math.pow(VARIANT_SKILL_COST_GROWTH, variantSkillLevel));
 }
 
+/** Gold cost to raise the Fame skill from `fameSkillLevel` to `fameSkillLevel + 1`. */
+export function getFameSkillUpgradeCost(fameSkillLevel: number): number {
+  return Math.round(FAME_SKILL_BASE_COST * Math.pow(FAME_SKILL_COST_GROWTH, fameSkillLevel));
+}
+
+/**
+ * The Fame skill's flat bonus onto Hero attack: Total Soldier Attack x
+ * (Fame Level x 1%). This reuses `getTotalSoldierAttack`
+ * (soldierFormulas.ts) as-is — the Sellswords curve/wall math is never
+ * recomputed here — and is added on top of the gear/boost-multiplied
+ * base attack in `getEffectiveHeroAttack`/`getActiveHeroesAttack` below,
+ * rather than living as a separate parallel mechanic.
+ */
+export function getFameAttackBonus(state: GameState): number {
+  return getTotalSoldierAttack(state.soldiers) * (state.heroes.fameSkillLevel * FAME_BONUS_PER_LEVEL);
+}
+
 /** Chance a given summon rolls the rare variant instead of a normal Hero. */
 export function getVariantSpawnChance(variantSkillLevel: number): number {
   return Math.min(
@@ -121,16 +142,21 @@ export function getEffectiveHeroAttack(
   state: GameState,
   now: number = Date.now(),
 ): number {
-  return getHeroBaseAttack(level, isVariant) * getSharedCombatMultiplier(state, now);
+  return (
+    getHeroBaseAttack(level, isVariant) * getSharedCombatMultiplier(state, now) +
+    getFameAttackBonus(state)
+  );
 }
 
 /** Summed effective attack of every currently-active Hero instance. */
 export function getActiveHeroesAttack(state: GameState, now: number = Date.now()): number {
   const multiplier = getSharedCombatMultiplier(state, now);
+  const fameBonus = getFameAttackBonus(state);
   return state.heroes.instances
     .filter((hero) => hero.active)
     .reduce(
-      (sum, hero) => sum + getHeroBaseAttack(state.heroes.level, hero.isVariant) * multiplier,
+      (sum, hero) =>
+        sum + getHeroBaseAttack(state.heroes.level, hero.isVariant) * multiplier + fameBonus,
       0,
     );
 }

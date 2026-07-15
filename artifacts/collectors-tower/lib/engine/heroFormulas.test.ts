@@ -7,6 +7,8 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  getActiveHeroesAttack,
+  getFameAttackBonus,
   getHeroRank,
   getMaxConcurrentHeroes,
   getNextHeroRank,
@@ -15,7 +17,9 @@ import {
   HERO_LEVEL_WALLS,
 } from './heroFormulas';
 import { BASE_HERO_POOL, HERO_POOL_PER_SUMMON_LEVEL, VARIANT_SPAWN_CHANCE_CAP } from './heroData';
-import { createInitialHeroesState, summonHero, maybeDefeatHero } from './heroEngine';
+import { createInitialHeroesState, summonHero, maybeDefeatHero, upgradeFameSkill } from './heroEngine';
+import { recruitSoldier, levelUpSoldier } from './soldierEngine';
+import { getTotalSoldierAttack } from './soldierFormulas';
 import { createInitialState } from './gameEngine';
 import type { GameState } from './types';
 
@@ -96,5 +100,43 @@ test('rng below the variant threshold spawns the rare variant instead of a norma
 
 test('createInitialHeroesState starts empty with no skill levels', () => {
   const initial = createInitialHeroesState();
-  assert.deepEqual(initial, { instances: [], level: 0, summonSkillLevel: 0, variantSkillLevel: 0 });
+  assert.deepEqual(initial, {
+    instances: [],
+    level: 0,
+    summonSkillLevel: 0,
+    variantSkillLevel: 0,
+    fameSkillLevel: 0,
+  });
+});
+
+test('Fame skill adds Total Soldier Attack x (Fame Level x 1%) onto Hero attack', () => {
+  let state = freshState();
+  // Force the gold high enough to afford recruiting/leveling/upgrading in this test.
+  state = { ...state, gold: 1_000_000 };
+  state = recruitSoldier(state, 'squire').state;
+
+  // No Fame levels yet — no bonus regardless of soldier attack.
+  assert.equal(getFameAttackBonus(state), 0);
+
+  state = upgradeFameSkill(state).state;
+  assert.equal(state.heroes.fameSkillLevel, 1);
+
+  const totalSoldierAttack = getTotalSoldierAttack(state.soldiers);
+  assert.ok(totalSoldierAttack > 0);
+  assert.equal(getFameAttackBonus(state), totalSoldierAttack * 0.01);
+
+  // Leveling a soldier raises Total Soldier Attack and, in turn, the Fame bonus —
+  // the exact same soldierFormulas/soldierEngine curve, never recomputed here.
+  state = levelUpSoldier(state, 'squire').state;
+  const raisedTotal = getTotalSoldierAttack(state.soldiers);
+  assert.ok(raisedTotal > totalSoldierAttack);
+  assert.equal(getFameAttackBonus(state), raisedTotal * 0.01);
+
+  // The bonus flows into active Heroes' effective attack, not a parallel mechanic.
+  const alwaysNormal = () => 0.99;
+  const withHero = summonHero(state, alwaysNormal).state;
+  const attackWithoutFame = withHero.heroes.instances.length; // sanity: at least one instance exists
+  assert.ok(attackWithoutFame > 0);
+  const activeAttack = getActiveHeroesAttack(withHero);
+  assert.ok(activeAttack >= getFameAttackBonus(withHero));
 });

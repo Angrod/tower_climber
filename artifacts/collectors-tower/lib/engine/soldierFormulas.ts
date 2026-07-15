@@ -14,7 +14,8 @@
  * the level-100 wall itself is untouched and must stay that way.
  */
 
-import type { SoldierDefinition } from './soldierData';
+import { SOLDIER_ROSTER, type SoldierDefinition } from './soldierData';
+import type { SoldiersState } from './types';
 
 export const SOLDIER_LEVEL_WALL = 100;
 export const SOLDIER_RATE_TRANSITION_LEVEL = 50;
@@ -70,4 +71,18 @@ export function getSoldierLevelUpCost(
 ): number {
   const base = def.recruitCost * 0.2;
   return Math.round(base * Math.pow(1.12, Math.max(0, currentLevel - 1)));
+}
+
+/**
+ * Total Soldier Attack — the sum of `getSoldierPower` across the whole
+ * roster at its current recruited/leveled state. This is the single
+ * feed into the Fame skill (see heroFormulas.ts `getFameAttackBonus`);
+ * it reuses the existing per-unit curve as-is rather than recomputing
+ * soldier power a second way.
+ */
+export function getTotalSoldierAttack(soldiers: SoldiersState): number {
+  return SOLDIER_ROSTER.reduce(
+    (sum, def) => sum + getSoldierPower(def, soldiers.units[def.id]?.level ?? 0),
+    0,
+  );
 }

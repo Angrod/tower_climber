@@ -5,6 +5,7 @@
  */
 
 import {
+  getFameSkillUpgradeCost,
   getMaxConcurrentHeroes,
   getSummonSkillUpgradeCost,
   getVariantSkillUpgradeCost,
@@ -20,7 +21,7 @@ interface EngineResult {
 }
 
 export function createInitialHeroesState(): HeroesState {
-  return { instances: [], level: 0, summonSkillLevel: 0, variantSkillLevel: 0 };
+  return { instances: [], level: 0, summonSkillLevel: 0, variantSkillLevel: 0, fameSkillLevel: 0 };
 }
 
 function makeHeroInstanceId(index: number): string {
@@ -144,5 +145,21 @@ export function upgradeVariantSkill(state: GameState): EngineResult {
       heroes: { ...state.heroes, variantSkillLevel: nextLevel },
     },
     events: [{ type: 'variantSkillUpgraded', payload: { level: nextLevel } }],
+  };
+}
+
+/** Spends gold to raise the Fame skill by one level, increasing Hero attack via Total Soldier Attack. */
+export function upgradeFameSkill(state: GameState): EngineResult {
+  const cost = getFameSkillUpgradeCost(state.heroes.fameSkillLevel);
+  if (state.gold < cost) return { state, events: [] };
+
+  const nextLevel = state.heroes.fameSkillLevel + 1;
+  return {
+    state: {
+      ...state,
+      gold: state.gold - cost,
+      heroes: { ...state.heroes, fameSkillLevel: nextLevel },
+    },
+    events: [{ type: 'fameSkillUpgraded', payload: { level: nextLevel } }],
   };
 }

@@ -104,7 +104,8 @@ export type GameEventType =
   | 'heroDefeated'
   | 'heroPromoted'
   | 'summonSkillUpgraded'
-  | 'variantSkillUpgraded';
+  | 'variantSkillUpgraded'
+  | 'fameSkillUpgraded';
 
 /**
  * The Hero promotion track. Every tier has a permanent id used by all
@@ -146,6 +147,8 @@ export interface HeroesState {
   summonSkillLevel: number;
   /** Rare-variant spawn-rate skill level. */
   variantSkillLevel: number;
+  /** Fame skill level — adds Total Soldier Attack x (Fame Level x 1%) onto Hero attack. */
+  fameSkillLevel: number;
 }
 
 export interface GameEvent {

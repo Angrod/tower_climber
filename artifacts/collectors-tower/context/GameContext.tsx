@@ -36,6 +36,7 @@ import {
 import { WEAPON_ROSTER } from '@/lib/engine/gearData';
 import {
   createInitialHeroesState,
+  upgradeFameSkill as upgradeFameSkillEngine,
   upgradeSummonSkill as upgradeSummonSkillEngine,
   upgradeVariantSkill as upgradeVariantSkillEngine,
 } from '@/lib/engine/heroEngine';
@@ -79,6 +80,7 @@ interface GameContextValue {
   unequipGear: (itemId: string) => void;
   upgradeSummonSkill: () => void;
   upgradeVariantSkill: () => void;
+  upgradeFameSkill: () => void;
 }
 
 const GameContext = createContext<GameContextValue | null>(null);
@@ -170,6 +172,12 @@ function normalizeLoadedState(parsed: unknown): GameState {
     rawHeroes.variantSkillLevel >= 0
       ? rawHeroes.variantSkillLevel
       : createInitialHeroesState().variantSkillLevel;
+  const fameSkillLevel =
+    typeof rawHeroes?.fameSkillLevel === 'number' &&
+    Number.isFinite(rawHeroes.fameSkillLevel) &&
+    rawHeroes.fameSkillLevel >= 0
+      ? rawHeroes.fameSkillLevel
+      : createInitialHeroesState().fameSkillLevel;
   const rawInstances = rawHeroes?.instances;
   const instances: HeroInstance[] = Array.isArray(rawInstances)
     ? rawInstances
@@ -194,7 +202,7 @@ function normalizeLoadedState(parsed: unknown): GameState {
     lastDailyLoginDate,
     adsRemoved,
     gear: { owned, equippedIds },
-    heroes: { instances, level: heroLevel, summonSkillLevel, variantSkillLevel },
+    heroes: { instances, level: heroLevel, summonSkillLevel, variantSkillLevel, fameSkillLevel },
   };
 }
 
@@ -385,6 +393,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
   }, []);
 
+  const upgradeFameSkill = useCallback(() => {
+    const before = stateRef.current;
+    const result = upgradeFameSkillEngine(before);
+    if (result.state === before) return;
+    setState(result.state);
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (!state.autoAttackActive) return;
     const interval = setInterval(() => {
@@ -416,6 +432,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       unequipGear,
       upgradeSummonSkill,
       upgradeVariantSkill,
+      upgradeFameSkill,
     }),
     [
       state,
@@ -437,6 +454,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       unequipGear,
       upgradeSummonSkill,
       upgradeVariantSkill,
+      upgradeFameSkill,
     ],
   );
 

@@ -107,5 +107,8 @@ export const gameCopy = {
   heroesUpgradeButtonLabel: (cost: number) => `Upgrade — ${cost}g`,
   heroesVariantSkillCardTitle: "Paragon's Favor",
   heroesVariantSkillCardBody: (percent: string) => `Chance a summon is the rare Ember Paragon. Currently ${percent}%.`,
+  heroesFameSkillCardTitle: 'Fame',
+  heroesFameSkillCardBody: (bonus: string) =>
+    `Adds Total Soldier Attack x (Fame Lv. x 1%) to Hero attack. Currently +${bonus} attack.`,
   heroesHintLabel: 'Tap the enemy on the Climb screen to summon a Hero into a free slot.',
 };

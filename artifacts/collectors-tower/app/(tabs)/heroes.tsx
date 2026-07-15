@@ -6,6 +6,8 @@ import { useColors } from '@/hooks/useColors';
 import { useGame } from '@/context/GameContext';
 import { gameCopy } from '@/constants/gameCopy';
 import {
+  getFameAttackBonus,
+  getFameSkillUpgradeCost,
   getHeroRank,
   getMaxConcurrentHeroes,
   getNextHeroRank,
@@ -17,7 +19,7 @@ import {
 export default function HeroesScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { state, isLoaded, upgradeSummonSkill, upgradeVariantSkill } = useGame();
+  const { state, isLoaded, upgradeSummonSkill, upgradeVariantSkill, upgradeFameSkill } = useGame();
 
   const webTopInset = Platform.OS === 'web' ? 67 : 0;
   const webBottomInset = Platform.OS === 'web' ? 34 : 0;
@@ -38,6 +40,10 @@ export default function HeroesScreen() {
   const variantCost = getVariantSkillUpgradeCost(heroes.variantSkillLevel);
   const canAffordVariant = gold >= variantCost;
   const variantPercent = (getVariantSpawnChance(heroes.variantSkillLevel) * 100).toFixed(1);
+
+  const fameCost = getFameSkillUpgradeCost(heroes.fameSkillLevel);
+  const canAffordFame = gold >= fameCost;
+  const fameBonus = (Math.round(getFameAttackBonus(state) * 10) / 10).toString();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -153,6 +159,33 @@ export default function HeroesScreen() {
             label={gameCopy.heroesUpgradeButtonLabel(variantCost)}
             canAfford={canAffordVariant}
             onPress={upgradeVariantSkill}
+          />
+        </View>
+
+        {/* Fame skill */}
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.cardRow}>
+            <View
+              style={[styles.iconWrap, { backgroundColor: colors.accent, borderColor: colors.border }]}
+            >
+              <MaterialCommunityIcons name="sword-cross" size={22} color={colors.primary} />
+            </View>
+            <View style={styles.cardInfo}>
+              <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+                {gameCopy.heroesFameSkillCardTitle}
+              </Text>
+              <Text style={[styles.cardBody, { color: colors.mutedForeground }]}>
+                {gameCopy.heroesFameSkillCardBody(fameBonus)}
+              </Text>
+              <Text style={[styles.cardSkillLevel, { color: colors.mutedForeground }]}>
+                {gameCopy.heroesSkillLevelLabel(heroes.fameSkillLevel)}
+              </Text>
+            </View>
+          </View>
+          <PressableUpgradeButton
+            label={gameCopy.heroesUpgradeButtonLabel(fameCost)}
+            canAfford={canAffordFame}
+            onPress={upgradeFameSkill}
           />
         </View>
 

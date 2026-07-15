@@ -84,3 +84,18 @@ export const VARIANT_SPAWN_CHANCE_PER_LEVEL = 0.01;
 export const VARIANT_SPAWN_CHANCE_CAP = 0.5;
 export const VARIANT_SKILL_BASE_COST = 250;
 export const VARIANT_SKILL_COST_GROWTH = 1.7;
+
+/**
+ * The Fame skill — the confirmed mechanism connecting the Sellswords
+ * roster to Hero attack: Hero attack gains Total Soldier Attack x
+ * (Fame Level x 1%). Original identity, not from the source game. Same
+ * "own id, own level, own upgrade-cost curve" treatment as the Summon
+ * skill above.
+ */
+export const FAME_SKILL_ID = 'skill_fame';
+export const FAME_SKILL_NAME = 'Fame';
+/** Hero attack bonus per Fame level, as a fraction of Total Soldier Attack (1% per level). Confirmed design. */
+export const FAME_BONUS_PER_LEVEL = 0.01;
+/** PLACEHOLDER — gold cost curve for leveling the Fame skill, same shape as the other Hero skills. */
+export const FAME_SKILL_BASE_COST = 200;
+export const FAME_SKILL_COST_GROWTH = 1.65;

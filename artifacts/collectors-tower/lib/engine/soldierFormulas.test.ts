@@ -6,10 +6,14 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  getSoldierPower,
   getSoldierWallLevel,
+  getTotalSoldierAttack,
   isSoldierAtWall,
   SOLDIER_LEVEL_WALLS,
 } from './soldierFormulas';
+import { getSoldierDefinition, SOLDIER_ROSTER } from './soldierData';
+import { createInitialSoldiersState } from './soldierEngine';
 
 test('walls are exactly 100, 500, 1000', () => {
   assert.deepEqual(SOLDIER_LEVEL_WALLS, [100, 500, 1000]);
@@ -44,4 +48,30 @@ test('999 -> 1000 transition hits the wall', () => {
 test('levels with no wall report null', () => {
   assert.equal(getSoldierWallLevel(50), null);
   assert.equal(getSoldierWallLevel(1001), null);
+});
+
+test('getTotalSoldierAttack sums getSoldierPower across the whole roster', () => {
+  const empty = createInitialSoldiersState();
+  assert.equal(getTotalSoldierAttack(empty), 0);
+
+  const partial = {
+    units: {
+      ...empty.units,
+      squire: { level: 10 },
+      wizard: { level: 3 },
+    },
+  };
+  const expected =
+    getSoldierPower(getSoldierDefinition('squire'), 10) +
+    getSoldierPower(getSoldierDefinition('wizard'), 3);
+  assert.equal(getTotalSoldierAttack(partial), expected);
+
+  const fullRoster = {
+    units: Object.fromEntries(SOLDIER_ROSTER.map((def) => [def.id, { level: 5 }])) as typeof empty.units,
+  };
+  const fullExpected = SOLDIER_ROSTER.reduce(
+    (sum, def) => sum + getSoldierPower(def, 5),
+    0,
+  );
+  assert.equal(getTotalSoldierAttack(fullRoster), fullExpected);
 });
