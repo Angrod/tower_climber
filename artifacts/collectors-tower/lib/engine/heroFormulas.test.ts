@@ -17,7 +17,7 @@ import {
   HERO_LEVEL_WALLS,
 } from './heroFormulas';
 import { BASE_HERO_POOL, HERO_POOL_PER_SUMMON_LEVEL, VARIANT_SPAWN_CHANCE_CAP } from './heroData';
-import { createInitialHeroesState, summonHero, maybeDefeatHero, upgradeFameSkill } from './heroEngine';
+import { applyEnemyAttack, createInitialHeroesState, summonHero, upgradeFameSkill } from './heroEngine';
 import { recruitSoldier, levelUpSoldier } from './soldierEngine';
 import { getTotalSoldierAttack } from './soldierFormulas';
 import { createInitialState } from './gameEngine';
@@ -72,22 +72,47 @@ test('summonHero fills up to the concurrent cap, then no-ops', () => {
   assert.equal(second.events.length, 0);
 });
 
-test('a defeated Hero frees its slot for resummon instead of being removed', () => {
+test('enemy retaliation damages an active Hero and defeats it once HP is depleted', () => {
   let state = freshState();
   const alwaysNormal = () => 0.99;
   state = summonHero(state, alwaysNormal).state;
   assert.equal(state.heroes.instances.length, 1);
+  const startingHp = state.heroes.instances[0].hp;
+  assert.ok(startingHp > 0);
 
-  // Force the death roll to land (rng below the death chance threshold).
-  const alwaysDies = () => 0;
-  const afterDeath = maybeDefeatHero(state, alwaysDies);
+  // A hit that doesn't deplete HP just wounds the Hero — it stays active.
+  const wounded = applyEnemyAttack(state, alwaysNormal);
+  assert.equal(wounded.state.heroes.instances[0].active, true);
+  assert.ok(wounded.state.heroes.instances[0].hp < startingHp);
+  assert.equal(wounded.events.length, 0);
+
+  // Once HP is driven to zero or below, the Hero is marked inactive (not
+  // removed) so its slot frees up for a future resummon.
+  const oneHpFromDeath: GameState = {
+    ...wounded.state,
+    heroes: {
+      ...wounded.state.heroes,
+      instances: [{ ...wounded.state.heroes.instances[0], hp: 1 }],
+    },
+  };
+  const afterDeath = applyEnemyAttack(oneHpFromDeath, alwaysNormal);
   assert.equal(afterDeath.state.heroes.instances.length, 1);
   assert.equal(afterDeath.state.heroes.instances[0].active, false);
+  assert.equal(afterDeath.state.heroes.instances[0].hp, 0);
+  assert.equal(afterDeath.events[0].type, 'heroDefeated');
 
   const resummon = summonHero(afterDeath.state, alwaysNormal);
   assert.equal(resummon.state.heroes.instances.length, 1);
   assert.equal(resummon.state.heroes.instances[0].active, true);
+  assert.ok(resummon.state.heroes.instances[0].hp > 0); // full HP restored on resummon
   assert.equal(resummon.state.heroes.level, 2);
+});
+
+test('applyEnemyAttack is a no-op when no Heroes are active', () => {
+  const state = freshState();
+  const result = applyEnemyAttack(state, () => 0.5);
+  assert.equal(result.state, state);
+  assert.equal(result.events.length, 0);
 });
 
 test('rng below the variant threshold spawns the rare variant instead of a normal Hero', () => {

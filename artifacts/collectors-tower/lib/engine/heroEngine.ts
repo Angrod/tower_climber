@@ -4,8 +4,10 @@
  * presentation concerns.
  */
 
+import { getEnemyAttackPower } from './formulas';
 import {
   getFameSkillUpgradeCost,
+  getHeroBaseHp,
   getMaxConcurrentHeroes,
   getSummonSkillUpgradeCost,
   getVariantSkillUpgradeCost,
@@ -46,26 +48,28 @@ export function summonHero(state: GameState, rng: () => number = Math.random): E
   const isVariant = rng() < getVariantSpawnChance(state.heroes.variantSkillLevel);
   const inactiveIndex = state.heroes.instances.findIndex((hero) => !hero.active);
 
+  const previousLevel = state.heroes.level;
+  const nextLevel = isHeroAtWall(previousLevel) ? previousLevel : previousLevel + 1;
+  const previousRank = getHeroRank(previousLevel);
+  const nextRank = getHeroRank(nextLevel);
+  // Every summon/resummon starts at full HP for the level it's joining at.
+  const maxHp = getHeroBaseHp(nextLevel, isVariant);
+
   let nextInstances: HeroInstance[];
   if (inactiveIndex >= 0) {
     nextInstances = state.heroes.instances.map((hero, index) =>
-      index === inactiveIndex ? { ...hero, active: true, isVariant } : hero,
+      index === inactiveIndex ? { ...hero, active: true, isVariant, hp: maxHp } : hero,
     );
   } else if (state.heroes.instances.length < maxConcurrent) {
     nextInstances = [
       ...state.heroes.instances,
-      { id: makeHeroInstanceId(state.heroes.instances.length), active: true, isVariant },
+      { id: makeHeroInstanceId(state.heroes.instances.length), active: true, isVariant, hp: maxHp },
     ];
   } else {
     // Every slot is active and the cap is full — shouldn't happen given
     // the activeCount guard above, but keeps this function total.
     return { state, events: [] };
   }
-
-  const previousLevel = state.heroes.level;
-  const nextLevel = isHeroAtWall(previousLevel) ? previousLevel : previousLevel + 1;
-  const previousRank = getHeroRank(previousLevel);
-  const nextRank = getHeroRank(nextLevel);
 
   const nextState: GameState = {
     ...state,
@@ -86,33 +90,34 @@ export function summonHero(state: GameState, rng: () => number = Math.random): E
 }
 
 /**
- * PLACEHOLDER combat-risk mechanic: the engine has no enemy-retaliation
- * system yet (enemies never deal damage back — see gameEngine.ts), so
- * there is no real trigger for "a Hero killed by an enemy". Until that
- * exists, each attack carries a small flat chance of felling one random
- * active Hero, which is enough to exercise the resummon flow end to
- * end. Replace with a real per-encounter death check once enemy
- * retaliation is designed.
+ * Real enemy retaliation: the current floor's enemy strikes one random
+ * active Hero for `getEnemyAttackPower(state.floor)` damage, taken out
+ * of that Hero's HP (see `getHeroBaseHp`/HeroInstance.hp). A Hero whose
+ * HP is driven to zero or below is marked inactive (not removed),
+ * freeing its slot for a future resummon — the same "not permanently
+ * lost" contract as before. No-op if no Heroes are currently active.
  */
-export const HERO_DEATH_CHANCE_PER_ATTACK = 0.05;
-
-/** Marks one random active Hero inactive (not removed), freeing its summon slot. No-op if none are active. */
-export function maybeDefeatHero(state: GameState, rng: () => number = Math.random): EngineResult {
+export function applyEnemyAttack(state: GameState, rng: () => number = Math.random): EngineResult {
   const activeIndices = state.heroes.instances
     .map((hero, index) => (hero.active ? index : -1))
     .filter((index) => index >= 0);
-  if (activeIndices.length === 0 || rng() >= HERO_DEATH_CHANCE_PER_ATTACK) {
+  if (activeIndices.length === 0) {
     return { state, events: [] };
   }
 
   const targetIndex = activeIndices[Math.floor(rng() * activeIndices.length)];
+  const target = state.heroes.instances[targetIndex];
+  const damage = getEnemyAttackPower(state.floor);
+  const remainingHp = target.hp - damage;
+  const defeated = remainingHp <= 0;
+
   const nextInstances = state.heroes.instances.map((hero, index) =>
-    index === targetIndex ? { ...hero, active: false } : hero,
+    index === targetIndex ? { ...hero, hp: Math.max(0, remainingHp), active: !defeated } : hero,
   );
 
   return {
     state: { ...state, heroes: { ...state.heroes, instances: nextInstances } },
-    events: [{ type: 'heroDefeated' }],
+    events: defeated ? [{ type: 'heroDefeated' }] : [],
   };
 }
 

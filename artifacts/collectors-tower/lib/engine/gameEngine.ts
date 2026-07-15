@@ -16,7 +16,7 @@ import {
 import { createInitialSoldiersState } from './soldierEngine';
 import { getEffectiveAttackPower } from './shopFormulas';
 import { createInitialGearState, dropGearFromChest } from './gearEngine';
-import { createInitialHeroesState, maybeDefeatHero, summonHero } from './heroEngine';
+import { applyEnemyAttack, createInitialHeroesState, summonHero } from './heroEngine';
 import { getActiveHeroesAttack } from './heroFormulas';
 import type { GameEvent, GameState } from './types';
 
@@ -91,16 +91,17 @@ function applyDamage(state: GameState, amount: number): EngineResult {
 
 /**
  * A manual player tap. Counts toward lifetime tap stats. Also attempts
- * to summon a Hero into any free concurrent slot, then rolls the
- * placeholder death-risk check that frees a slot for future resummons
- * (see heroEngine.ts `maybeDefeatHero` for why this stands in for real
- * enemy retaliation). Total damage is the Player's effective attack
- * plus every currently-active Hero's effective attack.
+ * to summon a Hero into any free concurrent slot, then applies real
+ * enemy retaliation — the current floor's enemy strikes one active Hero
+ * for its attack power (see heroEngine.ts `applyEnemyAttack`), freeing
+ * that Hero's slot for a future resummon if it runs out of HP. Total
+ * damage dealt to the enemy is the Player's effective attack plus every
+ * currently-active Hero's effective attack.
  */
 export function applyManualTap(state: GameState, rng: () => number = Math.random): EngineResult {
   const summonResult = summonHero(state, rng);
-  const deathResult = maybeDefeatHero(summonResult.state, rng);
-  const stateBeforeDamage = deathResult.state;
+  const retaliationResult = applyEnemyAttack(summonResult.state, rng);
+  const stateBeforeDamage = retaliationResult.state;
 
   const totalDamage =
     getEffectiveAttackPower(stateBeforeDamage) + getActiveHeroesAttack(stateBeforeDamage);
@@ -108,14 +109,20 @@ export function applyManualTap(state: GameState, rng: () => number = Math.random
 
   return {
     state: { ...damageResult.state, totalTaps: damageResult.state.totalTaps + 1 },
-    events: [...summonResult.events, ...deathResult.events, ...damageResult.events],
+    events: [...summonResult.events, ...retaliationResult.events, ...damageResult.events],
   };
 }
 
-/** An automated attack tick. Does not count as a manual tap. */
-export function applyAutoAttackTick(state: GameState): EngineResult {
+/**
+ * An automated attack tick. Does not count as a manual tap. Enemy
+ * retaliation applies here too — every exchange of damage, manual or
+ * automated, carries the same real combat risk to active Heroes.
+ */
+export function applyAutoAttackTick(state: GameState, rng: () => number = Math.random): EngineResult {
   if (!state.autoAttackActive) return { state, events: [] };
-  return applyDamage(state, getEffectiveAttackPower(state));
+  const retaliationResult = applyEnemyAttack(state, rng);
+  const damageResult = applyDamage(retaliationResult.state, getEffectiveAttackPower(retaliationResult.state));
+  return { state: damageResult.state, events: [...retaliationResult.events, ...damageResult.events] };
 }
 
 export function toggleAutoAttack(state: GameState): GameState {

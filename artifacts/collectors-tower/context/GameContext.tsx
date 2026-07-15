@@ -40,7 +40,7 @@ import {
   upgradeSummonSkill as upgradeSummonSkillEngine,
   upgradeVariantSkill as upgradeVariantSkillEngine,
 } from '@/lib/engine/heroEngine';
-import { getFameAttackBonus } from '@/lib/engine/heroFormulas';
+import { getFameAttackBonus, getHeroBaseHp } from '@/lib/engine/heroFormulas';
 import type { GameEvent, GameState, HeroInstance, SoldierId } from '@/lib/engine/types';
 
 const STORAGE_KEY = 'collectors-tower.game-state.v1';
@@ -196,7 +196,16 @@ function normalizeLoadedState(parsed: unknown): GameState {
             typeof instance.active === 'boolean' &&
             typeof instance.isVariant === 'boolean',
         )
-        .map((instance) => ({ ...instance }))
+        .map((instance) => ({
+          ...instance,
+          // hp didn't exist on saves from before enemy retaliation shipped —
+          // backfill a full-HP bar at the save's own level/variant instead
+          // of leaving it undefined and breaking combat math.
+          hp:
+            typeof instance.hp === 'number' && Number.isFinite(instance.hp) && instance.hp >= 0
+              ? instance.hp
+              : getHeroBaseHp(heroLevel, instance.isVariant),
+        }))
     : [];
 
   return {

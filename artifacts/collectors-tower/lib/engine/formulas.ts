@@ -17,6 +17,24 @@ export const BASE_ATTACK_POWER = 5;
 export const AUTO_ATTACK_INTERVAL_MS = 1000;
 export const AUTO_ATTACK_UNLOCK_FLOOR = 3;
 
+/**
+ * PLACEHOLDER enemy attack scaling — no reference data exists for enemy
+ * retaliation (unlike enemy HP above), same "flagged placeholder
+ * isolated in the data layer" treatment as HERO_BASE_ATTACK in
+ * heroData.ts. Reuses the confirmed enemy-HP growth/wall shape for
+ * consistency; only the magnitude is unverified. Drives
+ * `applyEnemyAttack` in heroEngine.ts — the real per-attack damage an
+ * enemy deals to one active Hero, replacing the old flat coin-flip.
+ */
+export const ENEMY_BASE_ATTACK = 3;
+export const ENEMY_ATTACK_GROWTH_RATE = 0.08;
+
+export function getEnemyAttackPower(floor: number): number {
+  const scaled = ENEMY_BASE_ATTACK * Math.pow(1 + ENEMY_ATTACK_GROWTH_RATE, floor - 1);
+  const wallAdjusted = isWallFloor(floor) ? scaled * WALL_MULTIPLIER : scaled;
+  return Math.round(wallAdjusted);
+}
+
 export function isWallFloor(floor: number): boolean {
   return floor > 0 && floor % WALL_INTERVAL === 0;
 }

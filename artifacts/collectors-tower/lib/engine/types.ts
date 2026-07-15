@@ -131,6 +131,12 @@ export interface HeroInstance {
   active: boolean;
   /** Whether this occupant is the rare stronger variant, not a normal Hero. */
   isVariant: boolean;
+  /**
+   * Current HP, out of `getHeroBaseHp(heroes.level, isVariant)` — depleted by
+   * enemy retaliation (see heroEngine.ts `applyEnemyAttack`). Reset to max
+   * on every summon/resummon into this slot.
+   */
+  hp: number;
 }
 
 export interface HeroesState {
