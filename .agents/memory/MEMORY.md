@@ -2,3 +2,4 @@
 - [Collector's Tower monetization](collectors-tower-monetization.md) — currency is earn-only by design; RevenueCat/ads are stubbed pending integration, wired for an easy swap-in later.
 - [Collector's Tower gear system](collectors-tower-gear-system.md) — locked family-stacking/pool-tier/duplicate-leveling math from the progression spreadsheet; don't reinvent it.
 - [Collector's Tower Fame skill](collectors-tower-fame-skill.md) — Fame (Total Soldier Attack x Fame Lv x 1% onto Hero attack) is the confirmed soldier-to-combat link; don't add a parallel mechanic.
+- [Collector's Tower Hero balancing](collectors-tower-hero-balancing.md) — Hero stats/promotion magnitudes have no reference data (unlike Soldiers); tune by playtesting, don't research/guess numbers.
