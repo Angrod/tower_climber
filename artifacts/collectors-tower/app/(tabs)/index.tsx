@@ -70,6 +70,7 @@ export default function ClimbScreen() {
             enemyMaxHp={state.enemyMaxHp}
             isWallFloor={isWallFloor(state.floor)}
             damagePopups={damagePopups}
+            heroInstances={state.heroes.instances}
             onTap={tapAttack}
           />
         </View>

@@ -11,6 +11,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useColors } from '@/hooks/useColors';
 import { gameCopy } from '@/constants/gameCopy';
 import type { DamagePopup } from '@/context/GameContext';
+import { HeroFigures } from './HeroFigures';
+import type { HeroInstance } from '@/lib/engine/types';
 
 interface EnemyStageProps {
   floor: number;
@@ -18,6 +20,7 @@ interface EnemyStageProps {
   enemyMaxHp: number;
   isWallFloor: boolean;
   damagePopups: DamagePopup[];
+  heroInstances: HeroInstance[];
   onTap: () => void;
 }
 
@@ -27,6 +30,7 @@ export function EnemyStage({
   enemyMaxHp,
   isWallFloor,
   damagePopups,
+  heroInstances,
   onTap,
 }: EnemyStageProps) {
   const colors = useColors();
@@ -89,6 +93,8 @@ export function EnemyStage({
           />
         </Animated.View>
       </Pressable>
+
+      <HeroFigures instances={heroInstances} />
 
       <Text style={[styles.enemyName, { color: colors.foreground }]}>
         {gameCopy.enemyLabel}
