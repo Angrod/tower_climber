@@ -40,6 +40,7 @@ import {
   upgradeSummonSkill as upgradeSummonSkillEngine,
   upgradeVariantSkill as upgradeVariantSkillEngine,
 } from '@/lib/engine/heroEngine';
+import { getFameAttackBonus } from '@/lib/engine/heroFormulas';
 import type { GameEvent, GameState, HeroInstance, SoldierId } from '@/lib/engine/types';
 
 const STORAGE_KEY = 'collectors-tower.game-state.v1';
@@ -49,6 +50,13 @@ const WALL_BANNER_LIFETIME_MS = 1800;
 export interface DamagePopup {
   id: string;
   amount: number;
+  /**
+   * Portion of `amount` contributed by the Fame skill (Total Soldier
+   * Attack x Fame Level x 1%, summed across every active Hero). Zero
+   * when the tap didn't route through Hero damage — e.g. auto-attack
+   * ticks, which never include Hero attack at all.
+   */
+  fameAmount: number;
 }
 
 export interface GearDropToast {
@@ -255,10 +263,14 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => claimDailyLoginEngine(prev).state);
   }, [isLoaded]);
 
-  const handleEvents = useCallback((events: GameEvent[]) => {
+  const handleEvents = useCallback((events: GameEvent[], fameAmount: number = 0) => {
     for (const event of events) {
       if (event.type === 'damageDealt' && event.payload) {
-        const popup: DamagePopup = { id: makeId(), amount: event.payload.amount };
+        const popup: DamagePopup = {
+          id: makeId(),
+          amount: event.payload.amount,
+          fameAmount,
+        };
         setDamagePopups((prev) => [...prev, popup]);
         setTimeout(() => {
           setDamagePopups((prev) => prev.filter((p) => p.id !== popup.id));
@@ -292,8 +304,16 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 
   const tapAttack = useCallback(() => {
     const result = applyManualTap(stateRef.current);
+    // Fame's contribution to this tap's damage: the flat per-Hero Fame
+    // bonus (getFameAttackBonus) times every Hero still active after
+    // the tap resolves, matching how applyManualTap/getActiveHeroesAttack
+    // sums it into totalDamage.
+    const activeHeroCount = result.state.heroes.instances.filter(
+      (hero) => hero.active,
+    ).length;
+    const fameAmount = getFameAttackBonus(result.state) * activeHeroCount;
     setState(result.state);
-    handleEvents(result.events);
+    handleEvents(result.events, fameAmount);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
   }, [handleEvents]);
 

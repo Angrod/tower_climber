@@ -5,7 +5,7 @@ import { useColors } from '@/hooks/useColors';
 import { useGame } from '@/context/GameContext';
 import { isWallFloor, AUTO_ATTACK_UNLOCK_FLOOR } from '@/lib/engine/formulas';
 import { getEffectiveAttackPower } from '@/lib/engine/shopFormulas';
-import { getMaxConcurrentHeroes } from '@/lib/engine/heroFormulas';
+import { getFameAttackBonus, getMaxConcurrentHeroes } from '@/lib/engine/heroFormulas';
 import { gameCopy } from '@/constants/gameCopy';
 import { StatBar } from '@/components/game/StatBar';
 import { WallBanner } from '@/components/game/WallBanner';
@@ -21,6 +21,14 @@ export default function ClimbScreen() {
 
   const webTopInset = Platform.OS === 'web' ? 67 : 0;
   const webBottomInset = Platform.OS === 'web' ? 34 : 0;
+
+  const activeHeroCount = isLoaded
+    ? state.heroes.instances.filter((hero) => hero.active).length
+    : 0;
+  // Total Fame-skill damage riding on Hero attack this tap: the flat
+  // per-Hero Fame bonus (getFameAttackBonus) x every active Hero, the
+  // same math applyManualTap/getActiveHeroesAttack use for damage.
+  const fameBonus = isLoaded ? getFameAttackBonus(state) * activeHeroCount : 0;
 
   if (!isLoaded) {
     return (
@@ -49,8 +57,9 @@ export default function ClimbScreen() {
             floor={state.floor}
             attackPower={Math.round(getEffectiveAttackPower(state) * 10) / 10}
             floorsCleared={state.floorsCleared}
-            activeHeroes={state.heroes.instances.filter((hero) => hero.active).length}
+            activeHeroes={activeHeroCount}
             maxHeroes={getMaxConcurrentHeroes(state.heroes.summonSkillLevel)}
+            fameBonus={fameBonus}
           />
         </View>
 

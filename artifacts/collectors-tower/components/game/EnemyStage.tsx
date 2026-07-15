@@ -54,16 +54,20 @@ export function EnemyStage({
 
       <View style={styles.popupLayer} pointerEvents="none">
         {damagePopups.map((popup, index) => (
-          <Animated.Text
+          <Animated.View
             key={popup.id}
             exiting={FadeOut.duration(500)}
-            style={[
-              styles.popup,
-              { color: colors.destructive, left: 20 + ((index * 13) % 60) },
-            ]}
+            style={[styles.popupGroup, { left: 20 + ((index * 13) % 60) }]}
           >
-            -{popup.amount}
-          </Animated.Text>
+            <Text style={[styles.popup, { color: colors.destructive }]}>
+              -{popup.amount}
+            </Text>
+            {popup.fameAmount > 0 && (
+              <Text style={[styles.popupFame, { color: colors.primary }]}>
+                +{Math.round(popup.fameAmount)} Fame
+              </Text>
+            )}
+          </Animated.View>
         ))}
       </View>
 
@@ -133,10 +137,17 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 40,
   },
-  popup: {
+  popupGroup: {
     position: 'absolute',
+    alignItems: 'flex-start',
+  },
+  popup: {
     fontSize: 16,
     fontFamily: 'Inter_700Bold',
+  },
+  popupFame: {
+    fontSize: 10,
+    fontFamily: 'Inter_600SemiBold',
   },
   enemyRing: {
     width: 176,

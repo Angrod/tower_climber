@@ -10,6 +10,12 @@ interface StatBarProps {
   floorsCleared: number;
   activeHeroes: number;
   maxHeroes: number;
+  /**
+   * Total Fame-skill damage currently added to Hero attack per tap
+   * (per-Hero Fame bonus x active Heroes). Only shown once it's
+   * actually contributing, so a fresh save isn't cluttered with a 0.
+   */
+  fameBonus: number;
 }
 
 function StatPill({
@@ -50,6 +56,7 @@ export function StatBar({
   floorsCleared,
   activeHeroes,
   maxHeroes,
+  fameBonus,
 }: StatBarProps) {
   const colors = useColors();
   return (
@@ -78,6 +85,14 @@ export function StatBar({
         value={String(floorsCleared)}
         tint={colors.mutedForeground}
       />
+      {fameBonus > 0 && (
+        <StatPill
+          icon="crown"
+          label="Fame/tap"
+          value={`+${Math.round(fameBonus)}`}
+          tint={colors.primary}
+        />
+      )}
     </View>
   );
 }
